@@ -31,3 +31,25 @@ POSSIBLE_TIMINGS = [{'interval': 5, 'num_of_samples': 200},
                     {'interval': 5, 'num_of_samples': 1000},
                     {'interval': 15, 'num_of_samples': 1000},
                     {'interval': 360, 'num_of_samples': 1000}]
+
+
+ENV_TYPE = os.getenv('ENV_TYPE')
+
+if ENV_TYPE == 'local':
+    DB_PASSWORD = os.getenv('POSTGRES_PASSWORD')
+    DB_USER = os.getenv('POSTGRES_USER')
+    DB_PORT = os.getenv('POSTGRES_PORT')
+    DB_BASE_NAME = os.getenv('POSTGRES_BASE')
+    DB_HOST = 'localhost'
+elif ENV_TYPE == 'external-with-servers-postgres':
+    DB_PASSWORD = os.getenv('POSTGRES_PASSWORD')
+    DB_USER = 'postgres'
+    DB_PORT = '5432'
+    DB_BASE_NAME = os.getenv('POSTGRES_BASE')
+    DB_HOST = 'localhost'
+else:
+    DB_PASSWORD = os.getenv('POSTGRES_PASSWORD')
+    DB_USER = os.getenv('POSTGRES_USER')
+    DB_PORT = int(os.getenv('POSTGRES_PORT'))
+    DB_BASE_NAME = os.getenv('POSTGRES_BASE')
+    DB_HOST = os.getenv('POSTGRES_HOST')

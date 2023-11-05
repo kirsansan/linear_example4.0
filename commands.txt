@@ -1,0 +1,22 @@
+# start
+uvicorn main:app --reload
+
+# migrations
+alembic init migrations
+alembic revision --autogenerate -m "name_rev"
+alembic upgrade head
+
+
+
+
+
+
+
+
+
+
+DOCs:
+fastapi-users
+https://fastapi-users.github.io/fastapi-users/12.1/configuration/databases/sqlalchemy/
+
+https://fastapi.tiangolo.com/tutorial/first-steps/
