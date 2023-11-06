@@ -66,8 +66,8 @@ class Prediction:
         self.eth_cumulative_change += eth_own_delta
         eth_percent_change = self.eth_cumulative_change / current_eth
         if VERBOSE_MODE:
-            print(f"Current ETH: {current_eth:15.6f},   Delta BTC:, {btc_delta:12.4f},   Delta ETH: {eth_delta:12.4f}"
-                  f",    Own ETH changes:, {eth_own_delta:12.6f}"
+            print(f"Current ETH: {current_eth:12.6f},   Delta BTC:, {btc_delta:10.4f},   Delta ETH: {eth_delta:10.4f}"
+                  f",    Own ETH changes:, {eth_own_delta:10.6f}"
                   f",    Comulative: {self.eth_cumulative_change:10.6f}  {eth_percent_change:4.6f}% ")
         if abs(eth_percent_change) >= ALLARM_THRESHOLD:
             self.send_message(current_eth, eth_percent_change)
