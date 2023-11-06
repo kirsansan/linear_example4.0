@@ -1,5 +1,7 @@
 from sqlalchemy import MetaData, Column, Table, Integer, Float, String, Time, Double, TIMESTAMP, ForeignKey, JSON
 
+from src.database import Base
+
 metadata = MetaData()
 
 cryptosamples = Table(
@@ -14,13 +16,13 @@ cryptosamples = Table(
 )
 
 
-# class CryptoSamples(Base):
-#     __tablename__ = 'cryptosamples'
-#
-#     id = Column(Integer, primary_key=True)
-#     symbol = Column(String)
-#     interval = Column(Integer)
-#     samples = Column(Integer)
-#     time_ = Column(Integer)
-#     value = Column(Double)
+class CryptoSamples(Base):
+    __tablename__ = 'cryptosamples'
+
+    id = Column(Integer, primary_key=True)
+    symbol = Column(String)
+    interval = Column(Integer)
+    samples = Column(Integer)
+    time_ = Column(Integer)
+    value = Column(Double)
 

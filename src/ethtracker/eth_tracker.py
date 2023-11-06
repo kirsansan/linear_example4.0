@@ -3,7 +3,7 @@ from time import sleep, time
 
 from src.ethtracker.exch_rates import BybitExchangeRates
 from config.config import FIRST_CRYPTO_SYMBOL, SECOND_CRYPTO_SYMBOL, INTERVAL, NUMBER_OF_SAMPLES
-from config.config import ALLARM_THRESHOLD, TIME_THRESHOLD, BAD_CORRELATION_THRESHOLD, VERBOSE_MODE, POSSIBLE_TIMINGS
+from config.config import ALARM_THRESHOLD, TIME_THRESHOLD, BAD_CORRELATION_THRESHOLD, VERBOSE_MODE, POSSIBLE_TIMINGS
 import statsmodels.api as statmodel
 from statsmodels.iolib.summary2 import Summary
 
@@ -17,7 +17,7 @@ class Prediction:
         self.requester_eth = BybitExchangeRates(SECOND_CRYPTO_SYMBOL)
         self.history_btc = self.requester_btc.get_historical_rates(INTERVAL, NUMBER_OF_SAMPLES)
         self.history_eth = self.requester_eth.get_historical_rates(INTERVAL, NUMBER_OF_SAMPLES)
-        self.btc_influence = self.calculate_influence()
+        self.btc_influence: float = self.calculate_influence()
         self.last_btc_price = self.history_btc[0]
         self.last_eth_price = self.history_eth[0]
         self.eth_cumulative_change = 0
@@ -44,6 +44,11 @@ class Prediction:
             sleep(15)
             self.rebuild_models()
 
+    @property
+    def status(self):
+        return {"ETH price": self.last_eth_price,
+                "cumulative changes": self.eth_cumulative_change,
+                "BTC influence": self.btc_influence}
 
     def set_zero_parameters(self):
         self.eth_cumulative_change = 0
@@ -66,10 +71,11 @@ class Prediction:
         self.eth_cumulative_change += eth_own_delta
         eth_percent_change = self.eth_cumulative_change / current_eth
         if VERBOSE_MODE:
-            print(f"Current ETH: {current_eth:12.6f},   Delta BTC:, {btc_delta:10.4f},   Delta ETH: {eth_delta:10.4f}"
-                  f",    Own ETH changes:, {eth_own_delta:10.6f}"
-                  f",    Comulative: {self.eth_cumulative_change:10.6f}  {eth_percent_change:4.6f}% ")
-        if abs(eth_percent_change) >= ALLARM_THRESHOLD:
+            print(
+                f"{time():10.2f} Current ETH: {current_eth:12.6f},   Delta BTC:, {btc_delta:10.4f},   Delta ETH: {eth_delta:10.4f}"
+                f",    Own ETH changes:, {eth_own_delta:10.6f}"
+                f",    Comulative: {self.eth_cumulative_change:10.6f}  {eth_percent_change:4.6f}% ")
+        if abs(eth_percent_change) >= ALARM_THRESHOLD:
             self.send_message(current_eth, eth_percent_change)
             self.set_zero_parameters()
             # we are in fire - we need to reincarnate

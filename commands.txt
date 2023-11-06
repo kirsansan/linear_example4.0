@@ -20,3 +20,31 @@ fastapi-users
 https://fastapi-users.github.io/fastapi-users/12.1/configuration/databases/sqlalchemy/
 
 https://fastapi.tiangolo.com/tutorial/first-steps/
+
+Для выполнения операции резервного копирования (dump) базы данных в FastAPI и последующей загрузки (restore) этих данных в новую базу данных, вы можете использовать утилиту для резервного копирования баз данных, такую как pg_dump для PostgreSQL, чтобы создать дамп (резервную копию) базы данных, а затем использовать команду pg_restore для восстановления данных в новую базу данных. Обратите внимание, что процесс резервного копирования и восстановления зависит от вашей конкретной СУБД.
+
+Вот общий шаги для выполнения такой операции:
+
+    Выполните резервное копирование базы данных в FastAPI, используя команду pg_dump (или аналогичную для вашей СУБД):
+
+python
+
+import subprocess
+
+# Команда для резервного копирования базы данных PostgreSQL
+dump_command = "pg_dump -U your_username -d your_database_name -f backup.sql"
+subprocess.run(dump_command, shell=True)
+
+    Получите резервную копию базы данных (backup.sql) и сохраните её.
+
+    Загрузите (восстановите) данные из резервной копии в новую базу данных, снова используя команду pg_restore (или аналогичную для вашей СУБД):
+
+python
+
+import subprocess
+
+# Команда для восстановления данных в новую базу данных PostgreSQL
+restore_command = "pg_restore -U your_username -d your_new_database_name -c backup.sql"
+subprocess.run(restore_command, shell=True)
+
+Обратите внимание, что вам нужно будет заменить your_username, your_database_name и your_new_database_name на соответствующие значения для вашей конкретной базы данных.
