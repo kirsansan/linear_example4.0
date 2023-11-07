@@ -70,6 +70,7 @@ class Prediction:
         print("Attention! Current own ETH price is over threshold!")
         print("Current price", current)
         print(f"Comulative: {self.eth_cumulative_change:10.6f}  {eth_percent_change:4.6f}% ")
+        print(self.floating_tail)
         print("================================")
 
     def add_to_floating_tail(self, cur_time, cur_value):
@@ -84,8 +85,8 @@ class Prediction:
                 break
         if del_counter > 0:
             self.floating_tail = self.floating_tail[del_counter:]
-            for point in self.floating_tail:
-                point["value"] -= correction
+            # for point in self.floating_tail:
+            #     point["value"] -= correction
         return cur_value - correction
 
     def current_handler(self):
@@ -101,7 +102,8 @@ class Prediction:
 
         # pay attention - if we have been working more TIME_THRESHOLD
         # self.eth_cumulative_change will increment taking into account correction
-        self.eth_cumulative_change += self.add_to_floating_tail(time(), eth_own_delta)
+        eth_own_delta_plus = self.add_to_floating_tail(time(), eth_own_delta)
+        self.eth_cumulative_change += eth_own_delta_plus
 
         eth_percent_change = self.eth_cumulative_change / current_eth
         if VERBOSE_MODE:
@@ -109,7 +111,8 @@ class Prediction:
                 f"{time():10.2f}   Current ETH: {current_eth:12.6f},   Delta BTC:, {btc_delta:10.4f}"
                 f",    Delta ETH: {eth_delta:10.4f}"
                 f",    Own ETH changes:, {eth_own_delta:10.6f}"
-                f",    Comulative: {self.eth_cumulative_change:10.6f}  {eth_percent_change:4.6f}% ")
+                f",    Comulative: {self.eth_cumulative_change:10.6f}, {eth_own_delta_plus:10.6f}  {100 * eth_percent_change:4.6f}% ")
+            # print([x['value'] for x in self.floating_tail]) # for debug decrease TIME_THRESHOLD to 60 or less sec
         if abs(eth_percent_change) >= ALARM_THRESHOLD:
             self.send_message(current_eth, eth_percent_change)
             self.set_zero_parameters()

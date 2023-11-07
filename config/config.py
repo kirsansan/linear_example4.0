@@ -21,7 +21,7 @@ NUMBER_OF_SAMPLES = 1000
 
 ALARM_THRESHOLD = 0.01  # one percent
 BAD_CORRELATION_THRESHOLD = 0.72  # see in research.py
-TIME_THRESHOLD = 3600  # 60*60 seconds = 1 hour
+TIME_THRESHOLD = 60 # 3600  # 60*60 seconds = 1 hour
 
 VERBOSE_MODE = True   # to print or not to print - that is the question
 
