@@ -51,26 +51,33 @@ class BybitExchangeRates(ExchangeRates):
 
     def get_last_rates(self):
         self.get_session()
-        temp_price_m = self.session.get_kline(category="linear",
-                                              symbol=self.master_symbol,
-                                              interval=1,
-                                              limit=1
-                                              )["result"]['list'][0][4]
+        try:
+            temp_price_m = self.session.get_kline(category="linear",
+                                                  symbol=self.master_symbol,
+                                                  interval=1,
+                                                  limit=1
+                                                  )["result"]['list'][0][4]
+        except:
+            print("Connection was lost")
+            return None
         return float(temp_price_m)
 
     def get_historical_rates(self, interval: int, number_of_samples: int, pandas_format_flag: bool = False):
         """interval	true	string	Kline interval. 1,3,5,15,30,60,120,240,360,720,D,M,W"""
         self.get_session()
-        temp_price_m = self.session.get_kline(category="linear",
-                                              symbol=self.master_symbol,
-                                              interval=interval,
-                                              limit=number_of_samples
-                                              )["result"]
-
+        try:
+            temp_price_m = self.session.get_kline(category="linear",
+                                                  symbol=self.master_symbol,
+                                                  interval=interval,
+                                                  limit=number_of_samples
+                                                  )["result"]
+        except:
+            print("Connection was lost")
+            return None
         array = np.array(temp_price_m['list'])
         if pandas_format_flag:
             pandy = pd.DataFrame(array[:, [0, 1, 2, 3, 4, 5, 6]],
-                              columns=['Time', 'Open', 'High', 'Low', 'Close', 'Volume', 'Turnover'])
+                                 columns=['Time', 'Open', 'High', 'Low', 'Close', 'Volume', 'Turnover'])
             pandy.set_index('Time', inplace=True)
 
             # Transrofm values to numeric
@@ -79,6 +86,7 @@ class BybitExchangeRates(ExchangeRates):
             return pandy
         else:
             return array[:, 4].astype(float)
+
 
 if __name__ == '__main__':
     bybitBTC = BybitExchangeRates("BTCUSDH24")

@@ -15,13 +15,24 @@ class Prediction:
     def __init__(self):
         self.requester_btc = BybitExchangeRates(FIRST_CRYPTO_SYMBOL)
         self.requester_eth = BybitExchangeRates(SECOND_CRYPTO_SYMBOL)
+        self.history_btc = []
+        self.history_eth = []
+        self.btc_influence: float = 0
+        self.last_btc_price = 0
+        self.last_eth_price = 0
+        self.eth_cumulative_change = 0
+        self.begin_time = time()
+        self.floating_tail: list[dict] = []  # list of measurements of own prices (for last hour)
+
+    def __repr__(self):
+        return "Prediction()"
+
+    def get_data(self):
         self.history_btc = self.requester_btc.get_historical_rates(INTERVAL, NUMBER_OF_SAMPLES)
         self.history_eth = self.requester_eth.get_historical_rates(INTERVAL, NUMBER_OF_SAMPLES)
         self.btc_influence: float = self.calculate_influence()
         self.last_btc_price = self.history_btc[0]
         self.last_eth_price = self.history_eth[0]
-        self.eth_cumulative_change = 0
-        self.begin_time = time()
 
     def calculate_influence(self):
         # if correlation < BAD_CORRELATION_THRESHOLD needed to recalculate
@@ -58,21 +69,45 @@ class Prediction:
         print("=================================")
         print("Attention! Current own ETH price is over threshold!")
         print("Current price", current)
-        print(f", Comulative: {self.eth_cumulative_change:10.6f}  {eth_percent_change:4.6f} ")
+        print(f"Comulative: {self.eth_cumulative_change:10.6f}  {eth_percent_change:4.6f}% ")
         print("================================")
+
+    def add_to_floating_tail(self, cur_time, cur_value):
+        correction = 0
+        del_counter = 0
+        self.floating_tail.append({"time": cur_time, "value": cur_value})
+        for point in self.floating_tail:
+            if point["time"] <= cur_time - TIME_THRESHOLD:
+                correction += point["value"]
+                del_counter += 1
+            else:
+                break
+        if del_counter > 0:
+            self.floating_tail = self.floating_tail[del_counter:]
+            for point in self.floating_tail:
+                point["value"] -= correction
+        return cur_value - correction
 
     def current_handler(self):
         current_btc = self.requester_btc.get_last_rates()
         current_eth = self.requester_eth.get_last_rates()
+        if not current_btc or not current_eth:
+            if VERBOSE_MODE:
+                print("Connetion was lost")
+            return
         btc_delta = (current_btc - self.last_btc_price)
         eth_delta = (current_eth - self.last_eth_price)
         eth_own_delta = eth_delta - btc_delta * self.btc_influence  # Own ETH changes
 
-        self.eth_cumulative_change += eth_own_delta
+        # pay attention - if we have been working more TIME_THRESHOLD
+        # self.eth_cumulative_change will increment taking into account correction
+        self.eth_cumulative_change += self.add_to_floating_tail(time(), eth_own_delta)
+
         eth_percent_change = self.eth_cumulative_change / current_eth
         if VERBOSE_MODE:
             print(
-                f"{time():10.2f} Current ETH: {current_eth:12.6f},   Delta BTC:, {btc_delta:10.4f},   Delta ETH: {eth_delta:10.4f}"
+                f"{time():10.2f}   Current ETH: {current_eth:12.6f},   Delta BTC:, {btc_delta:10.4f}"
+                f",    Delta ETH: {eth_delta:10.4f}"
                 f",    Own ETH changes:, {eth_own_delta:10.6f}"
                 f",    Comulative: {self.eth_cumulative_change:10.6f}  {eth_percent_change:4.6f}% ")
         if abs(eth_percent_change) >= ALARM_THRESHOLD:
@@ -81,9 +116,9 @@ class Prediction:
             # we are in fire - we need to reincarnate
             self.rebuild_models()
 
-        work_time = time() - self.begin_time
-        if work_time > TIME_THRESHOLD:
-            self.set_zero_parameters()
+        # work_time = time() - self.begin_time
+        # if work_time > TIME_THRESHOLD:
+        #     self.set_zero_parameters()
             # Actually this is not entirely fair, we have to remember the data from an hour ago
             # But for version w/o database let it be as is
             # Maximum what we might lose less 1 percent, but we wait for a huge moving

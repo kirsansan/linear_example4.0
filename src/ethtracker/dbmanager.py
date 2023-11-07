@@ -1,6 +1,6 @@
 from sqlalchemy import insert
 
-from src.models.models import cryptosamples
+from src.models.models import cryptosamples, CryptoSamples
 
 
 class DBManager:
@@ -19,12 +19,8 @@ class DBManager:
             list_with_data_for_write.append(
                 CryptoSamples(symbol=symbol, interval=interval, samples=samples, values=one_value))
         self.session.add_all(list_with_data_for_write)
-
-        # Добавляем всех пользователей сразу
         self.session.commit()
-
-        # Закрываем сессию
-        self.session.close()
+        # self.session.close()
 
     def get_values(self, aa):
         print(aa)
