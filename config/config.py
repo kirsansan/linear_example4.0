@@ -16,14 +16,15 @@ SECOND_CRYPTO_SYMBOL = 'ETHUSDH24'
 # SECOND_CRYPTO_SYMBOL = 'ETHUSDT'
 # for binance use symbols like BTCUSD_240329 ... and etc
 
-INTERVAL = 15
-NUMBER_OF_SAMPLES = 1000
+INTERVAL = 15  # interval between samples. default is 15
+NUMBER_OF_SAMPLES = 1000  # number of samples. default is 1000
 
-ALARM_THRESHOLD = 0.01  # one percent
-BAD_CORRELATION_THRESHOLD = 0.72  # see in research.py
-TIME_THRESHOLD = 60 # 3600  # 60*60 seconds = 1 hour
+ALARM_THRESHOLD = 0.01  # 0.01 = one percent
+BAD_CORRELATION_THRESHOLD = 0.72  # see explanation in research.py
+TIME_THRESHOLD = 3600  # 3600  # default 60*60 seconds = 1 hour
 
-VERBOSE_MODE = True   # to print or not to print - that is the question
+VERBOSE_MODE = True  # to print or not to print - that is the question
+REBUILD_MODELS_TIME = 60  # seconds. default = 10*60; if you don't want rebuilding - set 0
 
 # This list may contain extended intervals and numbers of samples
 POSSIBLE_TIMINGS = [{'interval': 5, 'num_of_samples': 200},
@@ -35,7 +36,6 @@ POSSIBLE_TIMINGS = [{'interval': 5, 'num_of_samples': 200},
                     {'interval': 5, 'num_of_samples': 1000},
                     {'interval': 15, 'num_of_samples': 1000},
                     {'interval': 360, 'num_of_samples': 1000}]
-
 
 ENV_TYPE = os.getenv('ENV_TYPE')  # local as default
 

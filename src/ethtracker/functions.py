@@ -1,11 +1,13 @@
 from src.ethtracker.hand_made_correlation import calculate_correlation
 from config.config import VERBOSE_MODE
+from src.ethtracker.myexeption import ConnectionLostError
 
 def detect_best_timing(handle_btc, handle_eth, test_timing: list[dict]) -> (int, int):
     for enum, params in enumerate(test_timing):
-        clear_btc = handle_btc.get_historical_rates(params['interval'], params['num_of_samples'], False)
-        clear_eth = handle_eth.get_historical_rates(params['interval'], params['num_of_samples'], False)
-        if not clear_btc.any() or not clear_eth.any():
+        try:
+            clear_btc = handle_btc.get_historical_rates(params['interval'], params['num_of_samples'], False)
+            clear_eth = handle_eth.get_historical_rates(params['interval'], params['num_of_samples'], False)
+        except ConnectionLostError:
             if VERBOSE_MODE:
                 print("Can't detect best timing - no data available")
             return test_timing[0]['interval'], test_timing[0]['num_of_samples'], 0

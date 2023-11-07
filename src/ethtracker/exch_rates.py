@@ -2,11 +2,12 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 
 from ccxt import bybit as bybit
+from pandas import DataFrame
 from pybit.unified_trading import HTTP, WebSocket
 from config.config import API_KEY, SECRET_KEY
 import numpy as np
 import pandas as pd
-
+from src.ethtracker.myexeption import ConnectionLostError
 
 class ExchangeRates(ABC):
 
@@ -14,7 +15,7 @@ class ExchangeRates(ABC):
         self.master_symbol = symbol
 
     @abstractmethod
-    def get_last_rates(self):
+    def get_last_rates(self) -> float | None:
         pass
 
     @abstractmethod
@@ -36,20 +37,20 @@ class BybitExchangeRates(ExchangeRates):
                 api_secret=SECRET_KEY,
             )
 
-    def get_current_rates(self):
-        """Returns current rates for the """
-        exchange = bybit()
-        params = {
-            'symbol': self.master_symbol,
-        }
-        # exchange.fetch_future_markets(params)
-        exchange.fetchMarkets()
-        order_book = exchange.fetchOrderBook(self.master_symbol)
-        print(order_book)
-        print(exchange)
-        return exchange
+    # def get_current_rates(self):
+    #     """Returns current rates for the """
+    #     exchange = bybit()
+    #     params = {
+    #         'symbol': self.master_symbol,
+    #     }
+    #     # exchange.fetch_future_markets(params)
+    #     exchange.fetchMarkets()
+    #     order_book = exchange.fetchOrderBook(self.master_symbol)
+    #     print(order_book)
+    #     print(exchange)
+    #     return exchange
 
-    def get_last_rates(self):
+    def get_last_rates(self) -> float | None:
         self.get_session()
         try:
             temp_price_m = self.session.get_kline(category="linear",
@@ -58,11 +59,12 @@ class BybitExchangeRates(ExchangeRates):
                                                   limit=1
                                                   )["result"]['list'][0][4]
         except:
-            print("Connection was lost")
-            return None
+            # print("Last rates - Connection was lost")
+            raise ConnectionLostError("Last rates - Connection was lost")
         return float(temp_price_m)
 
-    def get_historical_rates(self, interval: int, number_of_samples: int, pandas_format_flag: bool = False):
+    def get_historical_rates(self, interval: int, number_of_samples: int,
+                             pandas_format_flag: bool = False):
         """interval	true	string	Kline interval. 1,3,5,15,30,60,120,240,360,720,D,M,W"""
         self.get_session()
         try:
@@ -71,9 +73,9 @@ class BybitExchangeRates(ExchangeRates):
                                                   interval=interval,
                                                   limit=number_of_samples
                                                   )["result"]
-        except:
-            print("Connection was lost")
-            return None
+        except Exception:
+            # print("Historical rates - Connection was lost")
+            raise ConnectionLostError("Historical rates - Connection was lost")
         array = np.array(temp_price_m['list'])
         if pandas_format_flag:
             pandy = pd.DataFrame(array[:, [0, 1, 2, 3, 4, 5, 6]],

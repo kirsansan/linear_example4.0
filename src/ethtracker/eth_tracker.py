@@ -6,6 +6,7 @@ from config.config import FIRST_CRYPTO_SYMBOL, SECOND_CRYPTO_SYMBOL, INTERVAL, N
 from config.config import ALARM_THRESHOLD, TIME_THRESHOLD, BAD_CORRELATION_THRESHOLD, VERBOSE_MODE, POSSIBLE_TIMINGS
 import statsmodels.api as statmodel
 from statsmodels.iolib.summary2 import Summary
+from src.ethtracker.myexeption import ConnectionLostError
 
 from src.ethtracker.functions import detect_best_timing
 
@@ -28,11 +29,16 @@ class Prediction:
         return "Prediction()"
 
     def get_data(self):
-        self.history_btc = self.requester_btc.get_historical_rates(INTERVAL, NUMBER_OF_SAMPLES)
-        self.history_eth = self.requester_eth.get_historical_rates(INTERVAL, NUMBER_OF_SAMPLES)
-        self.btc_influence: float = self.calculate_influence()
-        self.last_btc_price = self.history_btc[0]
-        self.last_eth_price = self.history_eth[0]
+        try:
+            history_btc = self.requester_btc.get_historical_rates(INTERVAL, NUMBER_OF_SAMPLES)
+            history_eth = self.requester_eth.get_historical_rates(INTERVAL, NUMBER_OF_SAMPLES)
+            self.history_btc = history_btc
+            self.history_eth = history_eth
+            self.btc_influence: float = self.calculate_influence()
+            self.last_btc_price = self.history_btc[0]
+            self.last_eth_price = self.history_eth[0]
+        except ConnectionLostError:
+            pass
 
     def calculate_influence(self):
         # if correlation < BAD_CORRELATION_THRESHOLD needed to recalculate
@@ -47,12 +53,21 @@ class Prediction:
         Push me only in a case of emergency - I need much time for calculating"""
         interval, samples, coef = detect_best_timing(self.requester_btc, self.requester_eth, POSSIBLE_TIMINGS)
         if coef > BAD_CORRELATION_THRESHOLD:
-            self.history_btc = self.requester_btc.get_historical_rates(interval, samples)
-            self.history_eth = self.requester_eth.get_historical_rates(interval, samples)
-            self.btc_influence = self.calculate_influence()
+            try:
+                history_btc = self.requester_btc.get_historical_rates(interval, samples)
+                history_eth = self.requester_eth.get_historical_rates(interval, samples)
+                self.history_btc = history_btc
+                self.history_eth = history_eth
+                self.btc_influence = self.calculate_influence()
+            except ConnectionLostError:
+                 # very strange situation
+                 print("""We have done samples but cannot recalculate influence. 
+                       We have to try again. Wait 15 sec....""")
+                 sleep(15)
+                 self.rebuild_models()
         else:
-            print("We have to wait for a better time. Wait 15 sec....")
-            sleep(15)
+            print("We have to wait for a better time. Wait 60 sec....")
+            sleep(60)
             self.rebuild_models()
 
     @property
@@ -90,11 +105,12 @@ class Prediction:
         return cur_value - correction
 
     def current_handler(self):
-        current_btc = self.requester_btc.get_last_rates()
-        current_eth = self.requester_eth.get_last_rates()
-        if not current_btc or not current_eth:
+        try:
+            current_btc = self.requester_btc.get_last_rates()
+            current_eth = self.requester_eth.get_last_rates()
+        except ConnectionLostError as e:
             if VERBOSE_MODE:
-                print("Connetion was lost")
+                print(f"{time():10.2f} Error {e}. Seу you on the next step")
             return
         btc_delta = (current_btc - self.last_btc_price)
         eth_delta = (current_eth - self.last_eth_price)
