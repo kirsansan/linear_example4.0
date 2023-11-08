@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from src.ethtracker.myexeption import ConnectionLostError
 
+
 class ExchangeRates(ABC):
 
     def __init__(self, symbol: str = "BTCUSDT"):
@@ -28,6 +29,7 @@ class BybitExchangeRates(ExchangeRates):
     def __init__(self, symbol: str = "BTCUSDT"):
         super(BybitExchangeRates, self).__init__(symbol)
         self.session = None
+        self.exchange = None
 
     def get_session(self):
         if not self.session:
@@ -37,18 +39,24 @@ class BybitExchangeRates(ExchangeRates):
                 api_secret=SECRET_KEY,
             )
 
-    # def get_current_rates(self):
-    #     """Returns current rates for the """
-    #     exchange = bybit()
-    #     params = {
-    #         'symbol': self.master_symbol,
-    #     }
-    #     # exchange.fetch_future_markets(params)
-    #     exchange.fetchMarkets()
-    #     order_book = exchange.fetchOrderBook(self.master_symbol)
-    #     print(order_book)
-    #     print(exchange)
-    #     return exchange
+    def get_exchange(self):
+        if not self.exchange:
+            self.exchange = bybit()
+
+    def get_current_rates_ccxt(self):
+        """Returns current rates for the """
+        self.get_exchange()
+        # exchange.fetch_future_markets(params)
+        # self.exchange.fetchMarkets()
+        try:
+            order_book = self.exchange.fetchOrderBook(self.master_symbol)
+        except Exception:
+            raise ConnectionLostError("Last rates - Connection was lost")
+        # print(order_book)
+        # print(exchange)
+        best_bid = order_book['bids'][0][0]
+        best_ask = order_book['asks'][0][0]
+        return float((best_ask + best_bid) / 2)
 
     def get_last_rates(self) -> float | None:
         self.get_session()

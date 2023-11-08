@@ -2,7 +2,8 @@ from src.ethtracker.hand_made_correlation import calculate_correlation
 from config.config import VERBOSE_MODE
 from src.ethtracker.myexeption import ConnectionLostError
 
-def detect_best_timing(handle_btc, handle_eth, test_timing: list[dict]) -> (int, int):
+
+def detect_best_timing(handle_btc, handle_eth, test_timing: list[dict]) -> (int, int, float):
     for enum, params in enumerate(test_timing):
         try:
             clear_btc = handle_btc.get_historical_rates(params['interval'], params['num_of_samples'], False)

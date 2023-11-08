@@ -76,8 +76,8 @@ async def check_processor():
             # data = await queue.get()
             await asyncio.sleep(REBUILD_MODELS_TIME)
             if VERBOSE_MODE:
-                print(f"{REBUILD_MODELS_TIME} seconds left.")
-            prediction.rebuild_models()
+                print(f"{REBUILD_MODELS_TIME} seconds left. We have to Rebuild our models")
+            await prediction.rebuild_models()
     else:
         if VERBOSE_MODE:
             print("Check processor don't activate")

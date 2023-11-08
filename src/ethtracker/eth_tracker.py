@@ -1,4 +1,5 @@
 # from datetime import time
+import asyncio
 from time import sleep, time
 
 from src.ethtracker.exch_rates import BybitExchangeRates
@@ -47,7 +48,7 @@ class Prediction:
         print("Change influence coef:", btc_influence)
         return btc_influence
 
-    def rebuild_models(self):
+    async def rebuild_models(self):
         """
         Recalculate all models and choose the best model
         Push me only in a case of emergency - I need much time for calculating"""
@@ -62,13 +63,13 @@ class Prediction:
             except ConnectionLostError:
                  # very strange situation
                  print("""We have done samples but cannot recalculate influence. 
-                       We have to try again. Wait 15 sec....""")
-                 sleep(15)
-                 self.rebuild_models()
+                       We have to try again. Wait 10 sec....""")
+                 await asyncio.sleep(10)
+                 await self.rebuild_models()
         else:
-            print("We have to wait for a better time. Wait 60 sec....")
-            sleep(60)
-            self.rebuild_models()
+            print("We have to wait for a better time. Wait 15 sec....")
+            await asyncio.sleep(15)
+            await self.rebuild_models()
 
     @property
     def status(self):
@@ -106,8 +107,13 @@ class Prediction:
 
     def current_handler(self):
         try:
-            current_btc = self.requester_btc.get_last_rates()
-            current_eth = self.requester_eth.get_last_rates()
+            # One way
+            # current_btc = self.requester_btc.get_last_rates()
+            # current_eth = self.requester_eth.get_last_rates()
+
+            # Alternative way - not crossing with get_historical_data for better async working
+            current_btc = self.requester_btc.get_current_rates_ccxt()
+            current_eth = self.requester_eth.get_current_rates_ccxt()
         except ConnectionLostError as e:
             if VERBOSE_MODE:
                 print(f"{time():10.2f} Error {e}. Seу you on the next step")

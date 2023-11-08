@@ -24,7 +24,7 @@ BAD_CORRELATION_THRESHOLD = 0.72  # see explanation in research.py
 TIME_THRESHOLD = 3600  # 3600  # default 60*60 seconds = 1 hour
 
 VERBOSE_MODE = True  # to print or not to print - that is the question
-REBUILD_MODELS_TIME = 60  # seconds. default = 10*60; if you don't want rebuilding - set 0
+REBUILD_MODELS_TIME = 60  # seconds. default = 60*60; if you don't want rebuilding - set 0
 
 # This list may contain extended intervals and numbers of samples
 POSSIBLE_TIMINGS = [{'interval': 5, 'num_of_samples': 200},
