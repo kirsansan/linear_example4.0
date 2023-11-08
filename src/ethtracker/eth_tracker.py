@@ -1,12 +1,10 @@
-# from datetime import time
 import asyncio
-from time import sleep, time
+from time import time
 
 from src.ethtracker.exch_rates import BybitExchangeRates
 from config.config import FIRST_CRYPTO_SYMBOL, SECOND_CRYPTO_SYMBOL, INTERVAL, NUMBER_OF_SAMPLES
 from config.config import ALARM_THRESHOLD, TIME_THRESHOLD, BAD_CORRELATION_THRESHOLD, VERBOSE_MODE, POSSIBLE_TIMINGS
 import statsmodels.api as statmodel
-from statsmodels.iolib.summary2 import Summary
 from src.ethtracker.myexeption import ConnectionLostError
 
 from src.ethtracker.functions import detect_best_timing
@@ -30,6 +28,7 @@ class Prediction:
         return "Prediction()"
 
     def get_data(self):
+        """try ot get HISTORICAL data from API"""
         try:
             history_btc = self.requester_btc.get_historical_rates(INTERVAL, NUMBER_OF_SAMPLES)
             history_eth = self.requester_eth.get_historical_rates(INTERVAL, NUMBER_OF_SAMPLES)
@@ -42,7 +41,7 @@ class Prediction:
             pass
 
     def calculate_influence(self):
-        # if correlation < BAD_CORRELATION_THRESHOLD needed to recalculate
+        """ Calculate the influence BTC for ETH and return it"""
         model_sq = statmodel.OLS(self.history_eth, statmodel.add_constant(self.history_btc)).fit()
         btc_influence = model_sq.params[1]
         print("Change influence coef:", btc_influence)
@@ -51,7 +50,7 @@ class Prediction:
     async def rebuild_models(self):
         """
         Recalculate all models and choose the best model
-        Push me only in a case of emergency - I need much time for calculating"""
+        Push me only in a case of emergency - I need much time for API re-request and calculating"""
         interval, samples, coef = await detect_best_timing(self.requester_btc, self.requester_eth, POSSIBLE_TIMINGS)
         if coef > BAD_CORRELATION_THRESHOLD:
             try:
@@ -91,6 +90,9 @@ class Prediction:
         print("================================")
 
     def add_to_floating_tail(self, cur_time, cur_value):
+        """add a new value to the tail of the floating_tail
+        and check if we should delete correction
+        (if current time  more than head of this buffer + TIME_THRESHOLD )"""
         correction = 0
         del_counter = 0
         self.floating_tail.append({"time": cur_time, "value": cur_value})
@@ -137,17 +139,6 @@ class Prediction:
         if abs(eth_percent_change) >= ALARM_THRESHOLD:
             self.send_message(current_eth, eth_percent_change)
             self.set_zero_parameters()
-            # we are in fire - we need to reincarnate
-            # await self.rebuild_models()  # we don't need it. we have already got a second process for start it
-
-        # This is the old method
-        # work_time = time() - self.begin_time
-        # if work_time > TIME_THRESHOLD:
-        #     self.set_zero_parameters()
-            # Actually this is not entirely fair, we have to remember the data from an hour ago
-            # But for version w/o database let it be as is
-            # Maximum what we might lose less 1 percent, but we wait for a huge moving
-
         self.last_eth_price = current_eth
         self.last_btc_price = current_btc
 
