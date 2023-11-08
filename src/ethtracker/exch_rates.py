@@ -43,8 +43,8 @@ class BybitExchangeRates(ExchangeRates):
         if not self.exchange:
             self.exchange = bybit()
 
-    def get_current_rates_ccxt(self):
-        """Returns current rates for the """
+    def get_current_rates_ccxt(self) -> float:
+        """Returns current rates as average between ask and bid """
         self.get_exchange()
         # exchange.fetch_future_markets(params)
         # self.exchange.fetchMarkets()
@@ -59,6 +59,7 @@ class BybitExchangeRates(ExchangeRates):
         return float((best_ask + best_bid) / 2)
 
     def get_last_rates(self) -> float | None:
+        """Returns the last rates in 'Close'"""
         self.get_session()
         try:
             temp_price_m = self.session.get_kline(category="linear",
@@ -73,7 +74,8 @@ class BybitExchangeRates(ExchangeRates):
 
     def get_historical_rates(self, interval: int, number_of_samples: int,
                              pandas_format_flag: bool = False):
-        """interval	true	string	Kline interval. 1,3,5,15,30,60,120,240,360,720,D,M,W"""
+        """
+        interval	true	string	Kline interval. 1,3,5,15,30,60,120,240,360,720,D,M,W"""
         self.get_session()
         try:
             temp_price_m = self.session.get_kline(category="linear",
@@ -93,16 +95,8 @@ class BybitExchangeRates(ExchangeRates):
             # Transrofm values to numeric
             for col in ('Open', 'High', 'Low', 'Close', 'Volume', 'Turnover'):
                 pandy[col] = pandy[col].astype(float)
-            return pandy
+            return pandy  # it's need for data visual control while we researched the models
         else:
             return array[:, 4].astype(float)
 
 
-if __name__ == '__main__':
-    bybitBTC = BybitExchangeRates("BTCUSDH24")
-    bybitETH = BybitExchangeRates("ETHUSDH24")
-
-    print(bybitBTC.get_last_rates(), bybitETH.get_last_rates())
-    btc = bybitBTC.get_historical_rates(15, 1000, pandas_format_flag=False)
-    eth = bybitETH.get_historical_rates(15, 1000, pandas_format_flag=True)
-    print(btc, "\n", eth)

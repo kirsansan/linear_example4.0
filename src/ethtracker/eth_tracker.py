@@ -23,7 +23,7 @@ class Prediction:
         self.last_btc_price = 0
         self.last_eth_price = 0
         self.eth_cumulative_change = 0
-        self.begin_time = time()
+        # self.begin_time = time()
         self.floating_tail: list[dict] = []  # list of measurements of own prices (for last hour)
 
     def __repr__(self):
@@ -52,7 +52,7 @@ class Prediction:
         """
         Recalculate all models and choose the best model
         Push me only in a case of emergency - I need much time for calculating"""
-        interval, samples, coef = detect_best_timing(self.requester_btc, self.requester_eth, POSSIBLE_TIMINGS)
+        interval, samples, coef = await detect_best_timing(self.requester_btc, self.requester_eth, POSSIBLE_TIMINGS)
         if coef > BAD_CORRELATION_THRESHOLD:
             try:
                 history_btc = self.requester_btc.get_historical_rates(interval, samples)
@@ -78,15 +78,16 @@ class Prediction:
                 "BTC influence": self.btc_influence}
 
     def set_zero_parameters(self):
+        """Set the default vales of the parameters"""
         self.eth_cumulative_change = 0
-        self.begin_time = time()
+        # self.begin_time = time()
 
     def send_message(self, current, eth_percent_change):
+        """only print the message"""
         print("=================================")
         print("Attention! Current own ETH price is over threshold!")
         print("Current price", current)
-        print(f"Comulative: {self.eth_cumulative_change:10.6f}  {eth_percent_change:4.6f}% ")
-        print(self.floating_tail)
+        print(f"Comulative: {self.eth_cumulative_change:10.6f}  {100 * eth_percent_change:4.6f}% ")
         print("================================")
 
     def add_to_floating_tail(self, cur_time, cur_value):
@@ -101,13 +102,11 @@ class Prediction:
                 break
         if del_counter > 0:
             self.floating_tail = self.floating_tail[del_counter:]
-            # for point in self.floating_tail:
-            #     point["value"] -= correction
         return cur_value - correction
 
     def current_handler(self):
         try:
-            # One way
+            # Old way
             # current_btc = self.requester_btc.get_last_rates()
             # current_eth = self.requester_eth.get_last_rates()
 
@@ -139,8 +138,9 @@ class Prediction:
             self.send_message(current_eth, eth_percent_change)
             self.set_zero_parameters()
             # we are in fire - we need to reincarnate
-            self.rebuild_models()
+            # await self.rebuild_models()  # we don't need it. we have already got a second process for start it
 
+        # This is the old method
         # work_time = time() - self.begin_time
         # if work_time > TIME_THRESHOLD:
         #     self.set_zero_parameters()
@@ -152,12 +152,3 @@ class Prediction:
         self.last_btc_price = current_btc
 
 
-def main_process():
-    prediction = Prediction()
-    while True:
-        sleep(1)
-        prediction.current_handler()
-
-
-if __name__ == '__main__':
-    main_process()

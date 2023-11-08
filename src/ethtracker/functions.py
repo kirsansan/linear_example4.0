@@ -8,6 +8,7 @@ def detect_best_timing(handle_btc, handle_eth, test_timing: list[dict]) -> (int,
         try:
             clear_btc = handle_btc.get_historical_rates(params['interval'], params['num_of_samples'], False)
             clear_eth = handle_eth.get_historical_rates(params['interval'], params['num_of_samples'], False)
+            print("pym pym")
         except ConnectionLostError:
             if VERBOSE_MODE:
                 print("Can't detect best timing - no data available")
