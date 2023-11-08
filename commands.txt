@@ -7,7 +7,10 @@ alembic revision --autogenerate -m "name_rev"
 alembic upgrade head
 
 
-
+#coverage for pytest
+pip install pytest-cov
+pytest --cov
+pytest --cov --cov-report=html
 
 
 
