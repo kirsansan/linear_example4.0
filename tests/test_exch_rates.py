@@ -1,6 +1,4 @@
 from src.ethtracker.exch_rates import BybitExchangeRates
-import pytest
-from unittest.mock import patch
 
 
 class TestBybitExchangeRates:

@@ -12,6 +12,10 @@ pip install pytest-cov
 pytest --cov
 pytest --cov --cov-report=html
 
+# clearing code
+flake8 --max-line-length=120 --exclude=migrations,venv,venvunix
+
+
 
 
 

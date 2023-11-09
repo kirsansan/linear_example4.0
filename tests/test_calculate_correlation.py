@@ -22,7 +22,7 @@ def test_calc_correlation():
     x_values = [1.2, 1.5, 1.8, 2.1]
     y_values = [0.9, 1.2, 1.5, 1.8]
     correlation = calculate_correlation(x_values, y_values)
-    assert correlation == None
+    assert correlation is None
 
     x_values = [1.0, 1.0, 1.0, 1.0, 1.0]
     y_values = [1.0, 1.0, 1.0, 1.0, 1.0]

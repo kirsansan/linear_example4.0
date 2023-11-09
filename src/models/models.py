@@ -1,4 +1,4 @@
-from sqlalchemy import MetaData, Column, Table, Integer, Float, String, Time, Double, TIMESTAMP, ForeignKey, JSON
+from sqlalchemy import MetaData, Column, Table, Integer, String, Double
 
 from src.database import Base
 
@@ -25,4 +25,3 @@ class CryptoSamples(Base):
     samples = Column(Integer)
     time_ = Column(Integer)
     value = Column(Double)
-

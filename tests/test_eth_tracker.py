@@ -1,6 +1,4 @@
 import numpy as np
-
-from src.ethtracker.eth_tracker import Prediction
 from config.config import TIME_THRESHOLD
 
 
@@ -41,6 +39,7 @@ def test_current_handler(predict, mock_ex_rates):
     assert predict.btc_influence == 0.0  # should be 0
     assert predict.last_eth_price == 5.0  # should be 5.0 w/o changes (see mock.get_current_rates)
 
+
 def test_rebuild_models(predict, mock_ex_rates):
     predict.last_eth_price = 0
     predict.last_btc_price = 0
@@ -48,8 +47,7 @@ def test_rebuild_models(predict, mock_ex_rates):
     predict.history_eth = []
     predict.requester_btc = mock_ex_rates
     predict.requester_eth = mock_ex_rates
-    predict.btc_influence = 0.7   # necessary for change after recalculating
+    predict.btc_influence = 0.7  # necessary for change after recalculating
     predict.rebuild_models()
     assert round(predict.btc_influence, 5) == 1.0  # should be 1.0 for the same historycal observations
     assert predict.last_eth_price == 0.0  # should be 0  as default
-

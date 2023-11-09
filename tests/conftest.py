@@ -1,6 +1,5 @@
 import pytest
 from src.ethtracker.eth_tracker import Prediction
-from config.config import TIME_THRESHOLD
 from src.ethtracker.myexeption import ConnectionLostError
 
 p = Prediction()
@@ -35,7 +34,6 @@ class MockExchangeRatesException:
 
 mock_exchange_rates = MockExchangeRates()
 
-
 # def mock_func_with_exception():
 #     raise ConnectionLostError("I have never lied to you")
 #
@@ -43,6 +41,7 @@ mock_exchange_rates = MockExchangeRates()
 # @pytest.fixture
 # def except_me():
 #     return mock_func_with_exception()
+
 
 @pytest.fixture
 def predict():

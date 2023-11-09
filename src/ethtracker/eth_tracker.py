@@ -1,6 +1,4 @@
-import asyncio
 from time import time, sleep
-
 from src.ethtracker.exch_rates import BybitExchangeRates
 from config.config import FIRST_CRYPTO_SYMBOL, SECOND_CRYPTO_SYMBOL, INTERVAL, NUMBER_OF_SAMPLES
 from config.config import ALARM_THRESHOLD, TIME_THRESHOLD, \
@@ -61,8 +59,8 @@ class Prediction:
                 self.btc_influence = self.calculate_influence()
             except ConnectionLostError:
                 # very strange situation
-                print("""We have done samples but cannot recalculate influence. 
-                       We have to try again. Wait 10 sec....""")
+                print("We have done samples but cannot recalculate influence.")
+                print("We have to try again. Wait 10 sec....")
                 # await asyncio.sleep(10)
                 # await self.rebuild_models()
                 sleep(10)
@@ -138,8 +136,10 @@ class Prediction:
                 f"{time():10.2f}   Current ETH: {current_eth:12.6f},   Delta BTC:, {btc_delta:10.4f}"
                 f",    Delta ETH: {eth_delta:10.4f}"
                 f",    Own ETH changes:, {eth_own_delta:10.6f}"
-                f",    Comulative: {self.eth_cumulative_change:10.6f}, {eth_own_delta_plus:10.6f}  {100 * eth_percent_change:4.6f}% ")
-            # print([x['value'] for x in self.floating_tail]) # for debug decrease TIME_THRESHOLD to 60 or less sec
+                f",    Comulative: {self.eth_cumulative_change:10.6f}"
+                f", {eth_own_delta_plus:10.6f}  {100 * eth_percent_change:4.6f}% ")
+            # print([x['value'] for x in self.floating_tail])
+            # for debug decrease TIME_THRESHOLD to 60 or less sec
         if abs(eth_percent_change) >= ALARM_THRESHOLD:
             self.send_message(current_eth, eth_percent_change)
             self.set_zero_parameters()

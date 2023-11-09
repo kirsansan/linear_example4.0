@@ -2,6 +2,7 @@ import numpy as np
 
 
 def calculate_correlation(x, y):
+    """ calculate coefficient correlation between x and y loads"""
     # check length of the arrays
     if len(x) != len(y):
         raise ValueError("Length of x and y are not equal")
@@ -30,5 +31,3 @@ def calculate_correlation(x, y):
         correlation_coefficient = numerator / denominator
 
     return correlation_coefficient
-
-

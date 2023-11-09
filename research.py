@@ -46,15 +46,28 @@ if __name__ == '__main__':
         for params in test_timing:
             clear_btc = data_btc.get_historical_rates(params['interval'], params['num_of_samples'], False)
             clear_eth = data_eth.get_historical_rates(params['interval'], params['num_of_samples'], False)
-            correlations.append(calculate_correlation(clear_eth, clear_btc))
+            coef = calculate_correlation(clear_eth, clear_btc)
+            correlations.append(coef)
+            model_sq = statmodel.OLS(clear_eth, statmodel.add_constant(clear_btc)).fit()
+            btc_influence = model_sq.params[1]
+
+            # x1 = (max(clear_btc) + min(clear_btc)) / 2
+            # y1 = (max(clear_eth) + min(clear_eth)) / 2
+            x1 = np.mean(clear_btc)
+            y1 = np.mean(clear_eth)
+            de_x = (max(clear_btc) - min(clear_btc)) / 2
 
             plt.figure(figsize=(10, 6))
+            fig, ax = plt.subplots()
             plt.scatter(clear_btc, clear_eth, alpha=0.5)
             plt.title(f"Correlation ETHUSDT vs. BTCUSDT {params['interval']} with {params['num_of_samples']}")
             plt.xlabel('Price BTCUSDT')
             plt.ylabel('Price ETHUSDT')
-            plt.plot([min(clear_btc), max(clear_btc)], [min(clear_eth), max(clear_eth)], color="red", linewidth=2)
+            # plt.plot([min(clear_btc), max(clear_btc)], [min(clear_eth), max(clear_eth)], color="yellow", linewidth=2)
+            plt.plot([x1 - de_x, x1 + de_x], [y1 - de_x * btc_influence, y1 + de_x * btc_influence], color="red",
+                     linewidth=2)
             plt.grid()
+            ax.legend([f'corr={str(round(coef, 6))}', f'infl.={str(round(btc_influence, 6))}'])
             plt.show()
         # now we can see that the best correlation we have found with params 15, 1000
         print("the best result gives", max(correlations))
