@@ -1,12 +1,12 @@
 import asyncio
-from time import time
+from time import time, sleep
 
 from src.ethtracker.exch_rates import BybitExchangeRates
 from config.config import FIRST_CRYPTO_SYMBOL, SECOND_CRYPTO_SYMBOL, INTERVAL, NUMBER_OF_SAMPLES
-from config.config import ALARM_THRESHOLD, TIME_THRESHOLD, BAD_CORRELATION_THRESHOLD, VERBOSE_MODE, POSSIBLE_TIMINGS
+from config.config import ALARM_THRESHOLD, TIME_THRESHOLD, \
+    BAD_CORRELATION_THRESHOLD, VERBOSE_MODE, POSSIBLE_TIMINGS
 import statsmodels.api as statmodel
 from src.ethtracker.myexeption import ConnectionLostError
-
 from src.ethtracker.functions import detect_best_timing
 
 
@@ -47,11 +47,11 @@ class Prediction:
         print("Change influence coef:", btc_influence)
         return btc_influence
 
-    async def rebuild_models(self):
+    def rebuild_models(self):
         """
         Recalculate all models and choose the best model
         Push me only in a case of emergency - I need much time for API re-request and calculating"""
-        interval, samples, coef = await detect_best_timing(self.requester_btc, self.requester_eth, POSSIBLE_TIMINGS)
+        interval, samples, coef = detect_best_timing(self.requester_btc, self.requester_eth, POSSIBLE_TIMINGS)
         if coef > BAD_CORRELATION_THRESHOLD:
             try:
                 history_btc = self.requester_btc.get_historical_rates(interval, samples)
@@ -60,15 +60,19 @@ class Prediction:
                 self.history_eth = history_eth
                 self.btc_influence = self.calculate_influence()
             except ConnectionLostError:
-                 # very strange situation
-                 print("""We have done samples but cannot recalculate influence. 
+                # very strange situation
+                print("""We have done samples but cannot recalculate influence. 
                        We have to try again. Wait 10 sec....""")
-                 await asyncio.sleep(10)
-                 await self.rebuild_models()
+                # await asyncio.sleep(10)
+                # await self.rebuild_models()
+                sleep(10)
+                self.rebuild_models()
         else:
             print("We have to wait for a better time. Wait 15 sec....")
-            await asyncio.sleep(15)
-            await self.rebuild_models()
+            # await asyncio.sleep(15)
+            # await self.rebuild_models()
+            sleep(15)
+            self.rebuild_models()
 
     @property
     def status(self):
@@ -141,5 +145,3 @@ class Prediction:
             self.set_zero_parameters()
         self.last_eth_price = current_eth
         self.last_btc_price = current_btc
-
-

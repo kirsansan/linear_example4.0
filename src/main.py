@@ -4,7 +4,7 @@ from fastapi import FastAPI, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_async_session
-from src.ethtracker.eth_tracker import main_process, Prediction
+from src.ethtracker.eth_tracker import Prediction
 
 from config.config import VERBOSE_MODE, REBUILD_MODELS_TIME
 from src.models.models import CryptoSamples
@@ -31,7 +31,7 @@ async def check_processor():
             await asyncio.sleep(REBUILD_MODELS_TIME)
             if VERBOSE_MODE:
                 print(f"{REBUILD_MODELS_TIME} seconds left. We have to Rebuild our models")
-            await prediction.rebuild_models()
+            prediction.rebuild_models()
     else:
         if VERBOSE_MODE:
             print("Check processor don't activate")

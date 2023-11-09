@@ -37,9 +37,9 @@ if __name__ == '__main__':
     # make sure that both methods give the same result
     print(get_np_correlation(15, 1000)['Close'])
     print(get_my_correlation(15, 1000))
-    # but speed of the second method is better
+    # but speed of the second method as a rule is better
 
-    # visual testing for different lenght on samples and intervals
+    # visual testing for different length on samples and intervals
     test_timing = POSSIBLE_TIMINGS
     correlations = []
     if is_you_want_to_draw:
