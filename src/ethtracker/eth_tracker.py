@@ -74,6 +74,7 @@ class Prediction:
 
     @property
     def status(self):
+        """Return the status of state for getting outside"""
         return {"ETH price": self.last_eth_price,
                 "cumulative changes": self.eth_cumulative_change,
                 "BTC influence": self.btc_influence}
@@ -109,6 +110,9 @@ class Prediction:
         return cur_value - correction
 
     def current_handler(self):
+        """ primary handler for the main thread
+        go to the one step, take data, check ALARMs and Thresholds
+        have to live in some loop"""
         try:
             # Old way
             # current_btc = self.requester_btc.get_last_rates()

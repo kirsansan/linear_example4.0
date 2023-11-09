@@ -4,6 +4,9 @@ from src.ethtracker.myexeption import ConnectionLostError
 
 
 def detect_best_timing(handle_btc, handle_eth, test_timing: list[dict]) -> (int, int, float):
+    """ Walks through all timings and choose the best of it for model rebuilding
+    params: handlers for getting historical data (API or Base)
+    return: best interval,  best number of samples, the best correlation coefficient"""
     for enum, params in enumerate(test_timing):
         try:
             clear_btc = handle_btc.get_historical_rates(params['interval'], params['num_of_samples'], False)

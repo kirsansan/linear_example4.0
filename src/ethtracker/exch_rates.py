@@ -74,7 +74,7 @@ class BybitExchangeRates(ExchangeRates):
         it gives many observations data (samples) from current time to the past
         interval	true	string	Kline interval. 1,3,5,15,30,60,120,240,360,720,D,M,W
         We recommend set number of samples from 100 to 1000
-        pandas_format_flag used for a sintific sampling and don't need for work"""
+        pandas_format_flag used for a scientific sampling and don't need for work"""
         self.get_session()
         try:
             temp_price_m = self.session.get_kline(category="linear",
