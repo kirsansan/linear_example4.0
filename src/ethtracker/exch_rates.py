@@ -46,14 +46,10 @@ class BybitExchangeRates(ExchangeRates):
     def get_current_rates_ccxt(self) -> float:
         """Returns current rates as average between ask and bid """
         self.get_exchange()
-        # exchange.fetch_future_markets(params)
-        # self.exchange.fetchMarkets()
         try:
             order_book = self.exchange.fetchOrderBook(self.master_symbol)
         except Exception:
             raise ConnectionLostError("Last rates - Connection was lost")
-        # print(order_book)
-        # print(exchange)
         best_bid = order_book['bids'][0][0]
         best_ask = order_book['asks'][0][0]
         return float((best_ask + best_bid) / 2)
@@ -68,7 +64,6 @@ class BybitExchangeRates(ExchangeRates):
                                                   limit=1
                                                   )["result"]['list'][0][4]
         except:
-            # print("Last rates - Connection was lost")
             raise ConnectionLostError("Last rates - Connection was lost")
         return float(temp_price_m)
 
@@ -88,7 +83,6 @@ class BybitExchangeRates(ExchangeRates):
                                                   limit=number_of_samples
                                                   )["result"]
         except Exception:
-            # print("Historical rates - Connection was lost")
             raise ConnectionLostError("Historical rates - Connection was lost")
         array = np.array(temp_price_m['list'])
         if pandas_format_flag:
