@@ -1,8 +1,5 @@
 from abc import ABC, abstractmethod
-from datetime import datetime
-
 from ccxt import bybit as bybit
-from pandas import DataFrame
 from pybit.unified_trading import HTTP, WebSocket
 from config.config import API_KEY, SECRET_KEY
 import numpy as np
@@ -11,6 +8,7 @@ from src.ethtracker.myexeption import ConnectionLostError
 
 
 class ExchangeRates(ABC):
+    """ Abstract class because we need to learn work with bybit, binance and somebody else"""
 
     def __init__(self, symbol: str = "BTCUSDT"):
         self.master_symbol = symbol
@@ -32,6 +30,7 @@ class BybitExchangeRates(ExchangeRates):
         self.exchange = None
 
     def get_session(self):
+        """ open session for pybit.unified_trading"""
         if not self.session:
             self.session = HTTP(
                 testnet=False,
@@ -40,6 +39,7 @@ class BybitExchangeRates(ExchangeRates):
             )
 
     def get_exchange(self):
+        """ open connector for ccxt """
         if not self.exchange:
             self.exchange = bybit()
 
@@ -59,7 +59,7 @@ class BybitExchangeRates(ExchangeRates):
         return float((best_ask + best_bid) / 2)
 
     def get_last_rates(self) -> float | None:
-        """Returns the last rates in 'Close'"""
+        """Returns the last rates in 'Close' field (it works through pybit.unified_trading)"""
         self.get_session()
         try:
             temp_price_m = self.session.get_kline(category="linear",
@@ -75,7 +75,11 @@ class BybitExchangeRates(ExchangeRates):
     def get_historical_rates(self, interval: int, number_of_samples: int,
                              pandas_format_flag: bool = False):
         """
-        interval	true	string	Kline interval. 1,3,5,15,30,60,120,240,360,720,D,M,W"""
+        Very useful function from pybit.unified_trading
+        it gives many observations data (samples) from current time to the past
+        interval	true	string	Kline interval. 1,3,5,15,30,60,120,240,360,720,D,M,W
+        We recommend set number of samples from 100 to 1000
+        pandas_format_flag used for a sintific sampling and don't need for work"""
         self.get_session()
         try:
             temp_price_m = self.session.get_kline(category="linear",
@@ -92,7 +96,7 @@ class BybitExchangeRates(ExchangeRates):
                                  columns=['Time', 'Open', 'High', 'Low', 'Close', 'Volume', 'Turnover'])
             pandy.set_index('Time', inplace=True)
 
-            # Transrofm values to numeric
+            # Transrofmate values to numeric
             for col in ('Open', 'High', 'Low', 'Close', 'Volume', 'Turnover'):
                 pandy[col] = pandy[col].astype(float)
             return pandy  # it's need for data visual control while we researched the models
