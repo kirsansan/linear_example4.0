@@ -89,6 +89,7 @@ class BybitExchangeRates(ExchangeRates):
             pandy = pd.DataFrame(array[:, [0, 1, 2, 3, 4, 5, 6]],
                                  columns=['Time', 'Open', 'High', 'Low', 'Close', 'Volume', 'Turnover'])
             pandy.set_index('Time', inplace=True)
+            pandy = pandy.sort_index(ascending=True)
 
             # Transrofmate values to numeric
             for col in ('Open', 'High', 'Low', 'Close', 'Volume', 'Turnover'):

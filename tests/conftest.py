@@ -1,8 +1,17 @@
 import pytest
+from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.database import get_async_session
 from src.ethtracker.eth_tracker import Prediction
 from src.ethtracker.myexeption import ConnectionLostError
+from src.ethtracker.dbmanager import DBManager
 
-p = Prediction()
+session1: AsyncSession = Depends(get_async_session)
+db = DBManager(session1)
+p = Prediction(db)
+
+
 p.floating_tail = [{"time": 100, "value": 1}, {"time": 500, "value": 5}]
 
 

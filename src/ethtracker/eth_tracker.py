@@ -4,13 +4,16 @@ from config.config import FIRST_CRYPTO_SYMBOL, SECOND_CRYPTO_SYMBOL, INTERVAL, N
 from config.config import ALARM_THRESHOLD, TIME_THRESHOLD, \
     BAD_CORRELATION_THRESHOLD, VERBOSE_MODE, POSSIBLE_TIMINGS
 import statsmodels.api as statmodel
+
+from src.ethtracker.hand_made_correlation import calculate_correlation
 from src.ethtracker.myexeption import ConnectionLostError
 from src.ethtracker.functions import detect_best_timing
+from src.ethtracker.dbmanager import DBManager
 
 
 class Prediction:
 
-    def __init__(self):
+    def __init__(self, db_manager: DBManager):
         self.requester_btc = BybitExchangeRates(FIRST_CRYPTO_SYMBOL)
         self.requester_eth = BybitExchangeRates(SECOND_CRYPTO_SYMBOL)
         self.history_btc = []
@@ -21,6 +24,11 @@ class Prediction:
         self.eth_cumulative_change = 0
         # self.begin_time = time()
         self.floating_tail: list[dict] = []  # list of measurements of own prices (for last hour)
+        self.is_work_db = False
+        self.db_handler = db_manager
+        self.current_interval = INTERVAL
+        self.current_num_samples = NUMBER_OF_SAMPLES
+        self.current_coef = 0
 
     def __repr__(self):
         return "Prediction()"
@@ -28,8 +36,10 @@ class Prediction:
     def get_data(self):
         """try ot get HISTORICAL data from API"""
         try:
-            history_btc = self.requester_btc.get_historical_rates(INTERVAL, NUMBER_OF_SAMPLES)
-            history_eth = self.requester_eth.get_historical_rates(INTERVAL, NUMBER_OF_SAMPLES)
+            history_btc = self.requester_btc.get_historical_rates(self.current_interval, self.current_num_samples)
+            history_eth = self.requester_eth.get_historical_rates(self.current_interval, self.current_num_samples)
+
+            # if above we had exception - would not brake history parameters
             self.history_btc = history_btc
             self.history_eth = history_eth
             self.btc_influence: float = self.calculate_influence()
@@ -45,39 +55,43 @@ class Prediction:
         print("Change influence coef:", btc_influence)
         return btc_influence
 
+    def checker_temporary_history(self):
+        """ Calculate the alternative correlation coefficient
+        on the current data set"""
+        if self.is_work_db and self.db_handler is not None:
+            try:
+                b, e = self.db_handler.get_values(0, 1)
+                if len(b) >= 10:
+                    possible_coef: float = calculate_correlation(e, b)
+                    if possible_coef > self.current_coef:
+                        self.history_btc = e
+                        self.history_eth = b
+                        self.current_coef = possible_coef
+                        self.calculate_influence()
+            except Exception:
+                print("Cannot get data from base")
+
+
     def rebuild_models(self):
         """
         Recalculate all models and choose the best model
         Push me only in a case of emergency - I need much time for API re-request and calculating"""
         interval, samples, coef = detect_best_timing(self.requester_btc, self.requester_eth, POSSIBLE_TIMINGS)
         if coef > BAD_CORRELATION_THRESHOLD:
-            try:
-                history_btc = self.requester_btc.get_historical_rates(interval, samples)
-                history_eth = self.requester_eth.get_historical_rates(interval, samples)
-                self.history_btc = history_btc
-                self.history_eth = history_eth
-                self.btc_influence = self.calculate_influence()
-            except ConnectionLostError:
-                # very strange situation
-                print("We have done samples but cannot recalculate influence.")
-                print("We have to try again. Wait 10 sec....")
-                # await asyncio.sleep(10)
-                # await self.rebuild_models()
-                sleep(10)
-                self.rebuild_models()
+            self.current_coef = coef
+            self.current_interval = interval
+            self.current_num_samples = samples
+            self.get_data()
         else:
-            print("We have to wait for a better time. Wait 15 sec....")
-            # await asyncio.sleep(15)
-            # await self.rebuild_models()
-            sleep(15)
-            self.rebuild_models()
+            pass
 
     @property
     def status(self):
         """Return the status of state for getting outside"""
         return {"ETH price": self.last_eth_price,
                 "cumulative changes": self.eth_cumulative_change,
-                "BTC influence": self.btc_influence}
+                "BTC influence": self.btc_influence,
+                "Correlation coef": self.current_coef}
 
     def set_zero_parameters(self):
         """Set the default vales of the parameters"""
@@ -109,10 +123,11 @@ class Prediction:
             self.floating_tail = self.floating_tail[del_counter:]
         return cur_value - correction
 
-    def current_handler(self):
+    async def current_handler(self):
         """ primary handler for the main thread
         go to the one step, take data, check ALARMs and Thresholds
         have to live in some loop"""
+        fix_time = int(time())
         try:
             # Old way
             # current_btc = self.requester_btc.get_last_rates()
@@ -121,10 +136,16 @@ class Prediction:
             # Alternative way - not crossing with get_historical_data for better async working
             current_btc = self.requester_btc.get_current_rates_ccxt()
             current_eth = self.requester_eth.get_current_rates_ccxt()
+
         except ConnectionLostError as e:
             if VERBOSE_MODE:
-                print(f"{time():10.2f} Error {e}. Seу you on the next step")
+                print(f"{fix_time:10.2f} Error {e}. Seу you on the next step")
             return
+        if self.is_work_db and self.db_handler is not None:
+            try:
+                await self.db_handler.put_one_value(fix_time, current_btc, current_eth)
+            except Exception as e:
+                print(f"Cannot save current prices to database {e}")
         btc_delta = (current_btc - self.last_btc_price)
         eth_delta = (current_eth - self.last_eth_price)
         eth_own_delta = eth_delta - btc_delta * self.btc_influence  # Own ETH changes
