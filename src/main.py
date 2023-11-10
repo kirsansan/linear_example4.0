@@ -59,23 +59,12 @@ async def root():
 
 
 @app.get("/status")
-async def status(session: AsyncSession = Depends(get_async_session)):
+async def status():
+    """return status of work"""
     # data = await queue.get()
     data = prediction.status
     return {"message": "I'm still working.", "data": data}
 
-
-@app.get("/add")
-async def adding(session: AsyncSession = Depends(get_async_session)):
-    try:
-        aaa = prediction.requester_btc.get_historical_rates(15, 200)
-        constant_values = {"symbol": "BTC", "interval": 15, "samples": 200, "time_": 1636171200}
-        samples_to_add = [CryptoSamples(value=value, **constant_values) for value in aaa]
-        session.add_all(samples_to_add)
-        await session.commit()
-    except Exception as e:
-        print(f"Something Error {e}")
-    return {"status": 200}
 
 
 if __name__ == "__main__":
