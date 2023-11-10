@@ -1,13 +1,12 @@
 import asyncio
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import FastAPI
 import uvicorn
-from src.database import get_async_session
+
 
 from src.ethtracker.eth_tracker import Prediction
 from config.config import VERBOSE_MODE, REBUILD_MODELS_TIME
-from src.models.models import CryptoSamples
+
 
 queue = asyncio.Queue()
 prediction = Prediction()
