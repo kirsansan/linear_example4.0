@@ -25,6 +25,7 @@ TIME_THRESHOLD = 3600  # 3600  # default 60*60 seconds = 1 hour
 
 VERBOSE_MODE = True  # to print or not to print - that is the question
 REBUILD_MODELS_TIME = 60  # seconds. default = 60*60; if you don't want rebuilding - set 0
+MAX_TEMP_BUFFER_SIZE = 2 * 60 * 60  # 2 hours
 
 # This list may contain extended intervals and numbers of samples
 POSSIBLE_TIMINGS = [{'interval': 5, 'num_of_samples': 200},
@@ -36,7 +37,6 @@ POSSIBLE_TIMINGS = [{'interval': 5, 'num_of_samples': 200},
                     {'interval': 5, 'num_of_samples': 1000},
                     {'interval': 15, 'num_of_samples': 1000},
                     {'interval': 360, 'num_of_samples': 1000}]
-
 
 WORK_WITH_DATA_BASE = True
 

@@ -6,7 +6,7 @@ import uvicorn
 
 from src.database import get_async_session, get_db
 from src.ethtracker.eth_tracker import Prediction
-from config.config import VERBOSE_MODE, REBUILD_MODELS_TIME, WORK_WITH_DATA_BASE
+from config.config import VERBOSE_MODE, REBUILD_MODELS_TIME, WORK_WITH_DATA_BASE, MAX_TEMP_BUFFER_SIZE
 from src.ethtracker.dbmanager import DBManager
 
 db1 = DBManager()
@@ -37,11 +37,25 @@ async def check_processor():
             print("Check processor don't activate")
 
 
+async def cleaning_processor():
+    """ del old temporary observation data """
+    if WORK_WITH_DATA_BASE:
+        while True:
+            await asyncio.sleep(600)
+            if VERBOSE_MODE:
+                print(f"600 seconds left. We have to cleaning data")
+            await prediction.db_handler.clear_old_data_for_interval(0, 1, MAX_TEMP_BUFFER_SIZE)
+    else:
+        if VERBOSE_MODE:
+            print("Cleaning processor don't activate")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
     asyncio.create_task(main_processor())
     asyncio.create_task(check_processor())
+    asyncio.create_task(cleaning_processor())
     yield
     # Put under this line something what we need to do on shutdown
     # await session.close_all()

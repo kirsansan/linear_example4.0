@@ -1,3 +1,4 @@
+from time import time
 from typing import Tuple, List, Any
 
 from fastapi import Depends
@@ -28,6 +29,8 @@ class DBManager:
     def close_local_session(self):
         self.session.close()
 
+
+
     async def put_one_value(self, time: int, value1: float, value2: float):
         try:
             session = self.open_local_session()
@@ -45,11 +48,27 @@ class DBManager:
 
     async def clear_all_for_interval(self, interval: int, num_samples: int):
         """Clear all data in the given interval-samples
-        WITHOUT commit!!!"""
+        WITHOUT commint!"""
         garbage = delete(cryptosamples).where(cryptosamples.c.interval == interval,
                                               cryptosamples.c.samples == num_samples)
         await self.session.execute(garbage)
         # await self.session.commit()
+
+    async def clear_old_data_for_interval(self, interval: int, num_samples: int, time_cutter: int):
+        """Clear all data in the given interval-samples
+        which older  now()-time_cutter"""
+        kill_them_time = time() - time_cutter
+        try:
+            session = self.open_local_session()
+            garbage = delete(cryptosamples).where(cryptosamples.c.interval == interval,
+                                                  cryptosamples.c.samples == num_samples,
+                                                  cryptosamples.c.time_ < kill_them_time)
+            session.execute(garbage)
+            session.commit()
+            session.close()
+        except Exception as e:
+            print(f"Error deleting old values. {e}")
+
 
     def get_values(self, interval: int, num_samples: int) -> tuple[list[Any], list[Any]] | tuple[None, None]:
         """ return all values in the given interval-samples"""
