@@ -67,12 +67,12 @@ class Prediction:
             try:
                 b, e = self.db_handler.get_values(0, 1)
                 if len(b) >= 10:
-                    possible_coef: float = calculate_correlation(e, b)
+                    possible_coef: float = calculate_correlation(b, e)
                     if possible_coef > self.current_coef:
-                        self.history_btc = e
-                        self.history_eth = b
+                        self.history_btc = b
+                        self.history_eth = e
                         self.current_coef = possible_coef
-                        self.calculate_influence()
+                        self.btc_influence = self.calculate_influence()
             except Exception:
                 print("Cannot get data from base")
 
