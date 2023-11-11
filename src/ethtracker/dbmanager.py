@@ -51,13 +51,13 @@ class DBManager:
         await self.session.execute(garbage)
         # await self.session.commit()
 
-    async def get_values(self, interval: int, num_samples: int) -> tuple[list[Any], list[Any]] | tuple[None, None]:
+    def get_values(self, interval: int, num_samples: int) -> tuple[list[Any], list[Any]] | tuple[None, None]:
         """ return all values in the given interval-samples"""
         query = select(cryptosamples).where(cryptosamples.c.interval == interval,
                                             cryptosamples.c.samples == num_samples)
         try:
             session = self.open_local_session()
-            result = await self.session.execute(query)
+            result = session.execute(query)
             data = result.all()
             self.close_local_session()
             btc = [x[4] for x in data]

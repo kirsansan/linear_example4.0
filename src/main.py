@@ -94,44 +94,56 @@ async def status(session: AsyncSession = Depends(get_async_session)):
 @app.get("/rebuild")
 async def rebuilding():
     """Rebuild all models"""
+    old_data = prediction.status
     prediction.rebuild_models()
+    data = prediction.status
+    return {"message": "We rebuild all models", "old data": old_data, "new data": data}
 
 
-@app.get("/del")
-async def deleting(session: AsyncSession = Depends(get_async_session)):
-    db = DBManager(session)
-    await db.clearing(5, 200)
+@app.get("/check")
+async def check_temp():
+    """Check temporary data for comparison with default models"""
+    old_data = prediction.status
+    prediction.checker_temporary_history()
+    data = prediction.status
+    return {"message": "We carry out calculations on temporary data", "old data": old_data, "new data": data}
 
 
-@app.get("/look")
-async def looking(session: AsyncSession = Depends(get_async_session)):
-    # db = DBManager(session)
-    # await db.get_values(5, 500)
-    print(session)
+# @app.get("/del")
+# async def deleting(session: AsyncSession = Depends(get_async_session)):
+#     db = DBManager(session)
+#     await db.clearing(5, 200)
+#
+#
+# @app.get("/look")
+# async def looking(session: AsyncSession = Depends(get_async_session)):
+#     # db = DBManager(session)
+#     # await db.get_values(5, 500)
+#     print(session)
 
 
-@app.get("/add")
-async def adding(session: AsyncSession = Depends(get_async_session)):
-    db = DBManager(session)
-    api_requestor1 = BybitExchangeRates(FIRST_CRYPTO_SYMBOL)
-    api_requestor2 = BybitExchangeRates(SECOND_CRYPTO_SYMBOL)
-    test_timing = copy.deepcopy(POSSIBLE_TIMINGS)
-
-    for enum, params in enumerate(test_timing):
-        print(params)
-        try:
-            data1 = api_requestor1.get_historical_rates(params['interval'], params['num_of_samples'], True)
-            data2 = api_requestor2.get_historical_rates(params['interval'], params['num_of_samples'], True)
-            try:
-                await db.put_values(params['interval'], params['num_of_samples'], data1, data2)
-            except Exception as e:
-                print(f"Database error {e}")
-                return {"status": 500, "message": "Internal server error (DATABASE error)"}
-        except ConnectionLostError:
-            if VERBOSE_MODE:
-                print("Can't detect best timing - no data available")
-                return {"status": 500, "message": "Internal server error (API error)"}
-    return {"status": 200, "message": "Base have renovated"}
+# @app.get("/add")
+# async def adding(session: AsyncSession = Depends(get_async_session)):
+#     db = DBManager(session)
+#     api_requestor1 = BybitExchangeRates(FIRST_CRYPTO_SYMBOL)
+#     api_requestor2 = BybitExchangeRates(SECOND_CRYPTO_SYMBOL)
+#     test_timing = copy.deepcopy(POSSIBLE_TIMINGS)
+#
+#     for enum, params in enumerate(test_timing):
+#         print(params)
+#         try:
+#             data1 = api_requestor1.get_historical_rates(params['interval'], params['num_of_samples'], True)
+#             data2 = api_requestor2.get_historical_rates(params['interval'], params['num_of_samples'], True)
+#             try:
+#                 await db.put_values(params['interval'], params['num_of_samples'], data1, data2)
+#             except Exception as e:
+#                 print(f"Database error {e}")
+#                 return {"status": 500, "message": "Internal server error (DATABASE error)"}
+#         except ConnectionLostError:
+#             if VERBOSE_MODE:
+#                 print("Can't detect best timing - no data available")
+#                 return {"status": 500, "message": "Internal server error (API error)"}
+#     return {"status": 200, "message": "Base have renovated"}
 
 
 if __name__ == "__main__":
