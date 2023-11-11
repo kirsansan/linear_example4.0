@@ -38,7 +38,7 @@ POSSIBLE_TIMINGS = [{'interval': 5, 'num_of_samples': 200},
                     {'interval': 360, 'num_of_samples': 1000}]
 
 
-WORK_WITH_DATA_BASE = False
+WORK_WITH_DATA_BASE = True
 
 ENV_TYPE = os.getenv('ENV_TYPE')  # local as default
 

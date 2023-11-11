@@ -4,7 +4,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 import uvicorn
-from src.database import get_async_session
+
+
+from src.database import get_async_session, get_db, engine_s
 
 from src.ethtracker.eth_tracker import Prediction
 from config.config import VERBOSE_MODE, REBUILD_MODELS_TIME, \
@@ -14,9 +16,12 @@ from src.models.models import CryptoSamples
 from src.ethtracker.dbmanager import DBManager
 from src.ethtracker.exch_rates import BybitExchangeRates
 
-session1: AsyncSession = Depends(get_async_session)
-db1 = DBManager(session1)
-queue = asyncio.Queue()
+# session1: AsyncSession = Depends(get_async_session)
+# print("sess1", session1)
+# session2 = Depends(get_db)
+# print("sess2", session2)
+db1 = DBManager()
+# queue = asyncio.Queue()
 prediction = Prediction(db1)
 prediction.is_work_db = WORK_WITH_DATA_BASE
 
@@ -24,6 +29,7 @@ prediction.is_work_db = WORK_WITH_DATA_BASE
 async def main_processor():
     """main application thread  """
     # prediction = Prediction()
+    print("Wait for API connection...")
     prediction.get_data()
     while True:
         await prediction.current_handler()
@@ -46,12 +52,20 @@ async def check_processor():
         if VERBOSE_MODE:
             print("Check processor don't activate")
 
+# async def s_processor():
+#     from sqlalchemy.orm import sessionmaker
+#     engine = engine_s
+#     SL = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+#     db = SL()
+#     print("s_process sess", SL)
+#     print("db", db)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Before yield
     asyncio.create_task(main_processor())
     # asyncio.create_task(check_processor())
+    # asyncio.create_task(s_processor())
     yield
     # Put under this line something what we need to do on shutdown
     # await session.close_all()
@@ -64,7 +78,8 @@ app = FastAPI(lifespan=lifespan,
 
 
 @app.get("/")
-async def root():
+async def root(session=Depends(get_db)):
+    print(session)
     return {"message": "ETHEREUM tracker"}
 
 
@@ -87,10 +102,13 @@ async def deleting(session: AsyncSession = Depends(get_async_session)):
     db = DBManager(session)
     await db.clearing(5, 200)
 
+
 @app.get("/look")
 async def looking(session: AsyncSession = Depends(get_async_session)):
-    db = DBManager(session)
-    await db.get_values(5, 500)
+    # db = DBManager(session)
+    # await db.get_values(5, 500)
+    print(session)
+
 
 @app.get("/add")
 async def adding(session: AsyncSession = Depends(get_async_session)):

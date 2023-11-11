@@ -1,4 +1,9 @@
 from time import time, sleep
+
+from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.database import get_async_session
 from src.ethtracker.exch_rates import BybitExchangeRates
 from config.config import FIRST_CRYPTO_SYMBOL, SECOND_CRYPTO_SYMBOL, INTERVAL, NUMBER_OF_SAMPLES
 from config.config import ALARM_THRESHOLD, TIME_THRESHOLD, \
