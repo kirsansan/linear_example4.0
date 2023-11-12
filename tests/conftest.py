@@ -7,8 +7,9 @@ from src.ethtracker.eth_tracker import Prediction
 from src.ethtracker.myexeption import ConnectionLostError
 from src.ethtracker.dbmanager import DBManager
 
-session1: AsyncSession = Depends(get_async_session)
-db = DBManager(session1)
+WORK_WITH_DATA_BASE = False
+
+db = DBManager()
 p = Prediction(db)
 
 
